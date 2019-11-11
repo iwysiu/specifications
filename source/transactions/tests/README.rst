@@ -495,6 +495,41 @@ instead.
 
           assert len(addresses) > 1
 
+WIP: Tests to ensure creating collections and indexes works
+===========================================================
+
+1. - Create non-existing collection in transaction -> success
+     - ``create`` command is sent to the server
+   - Verify collection exists within transaction?
+   - Verify collection does not exist outside of transaction?
+   - Verify collection exists after committing transaction?
+
+2. - Insert document into non-existing collection in transaction
+     - ``insert`` command is sent to the server
+   - Proceed as with step 1
+
+3. - Create non-existing collection in transaction 1 -> success
+   - Create non-existing collection in transaction 2 -> success?
+   - Commit transaction 1 -> success
+   - Commit transaction 2 -> failure
+
+4. - Create index on non-existing collection in transaction -> success
+   - Verify collection/index exist within transaction
+   - Verify collection/index does not exist outside of transaction
+   - Collection/index exist after committing transaction
+
+5. - Run aggregate with $merge on non-existing collection in transaction -> success
+
+6. - Run aggregate with $out on non-existing collection in transaction -> success
+
+7. - Run aggregate with $out on existing collection in transaction -> failure
+
+Questions:
+
+* What do we test? Tests above test server behaviour, which might not be desirable
+* Do we want to cover all possible operations within transactions to ensure drivers don't inspect commands?
+
+
 Q & A
 =====
 
