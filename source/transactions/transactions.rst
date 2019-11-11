@@ -1288,7 +1288,7 @@ The following commands are allowed inside transactions:
 
 3.  killCursors
 
-4.  insert
+4.  insert, including into a non-existing collection to implicitly create it
 
 5.  update
 
@@ -1298,11 +1298,17 @@ The following commands are allowed inside transactions:
 
 8.  aggregate (including $lookup)
 
-    -  The ``$out`` and ``$merge`` stages are prohibited.
+    -  The ``$out`` stage is only allowed if the target does not exist. The
+       ``$merge`` stage is always allowed
 
 9.  distinct
 
 10. geoSearch
+
+11. create
+
+12. createIndexes on an empty collection created in the same transaction or on a
+    non-existing collection
 
 Why don’t drivers automatically retry commit after a write concern timeout error?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
