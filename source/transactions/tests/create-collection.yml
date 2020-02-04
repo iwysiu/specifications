@@ -1,0 +1,298 @@
+runOn:
+  -
+    minServerVersion: "4.3.3"
+    topology: ["replicaset"]
+
+database_name: &database_name "transaction-tests"
+collection_name: &collection_name "test"
+
+data: []
+
+tests:
+  - description: explicitly create collection using create command
+
+    operations:
+      - name: dropCollection
+        object: database
+        arguments:
+          collection: *collection_name
+      - name: startTransaction
+        object: session0
+      - name: createCollection
+        object: database
+        arguments:
+          session: session0
+          collection: *collection_name
+      - name: assertCollectionNotExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: *collection_name
+      - name: commitTransaction
+        object: session0
+      - name: assertCollectionExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: *collection_name
+
+    expectations:
+      - command_started_event:
+          command:
+            drop: *collection_name
+            writeConcern:
+          command_name: drop
+          database_name: *database_name
+      - command_started_event:
+          command:
+            create: *collection_name
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction: true
+            autocommit: false
+            writeConcern:
+          command_name: create
+          database_name: *database_name
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+      - command_started_event:
+          command:
+            commitTransaction: 1
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction:
+            autocommit: false
+            writeConcern:
+          command_name: commitTransaction
+          database_name: admin
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+
+  - description: implicitly create collection using insert
+
+    operations:
+      - name: dropCollection
+        object: database
+        arguments:
+          collection: *collection_name
+      - name: startTransaction
+        object: session0
+      - name: insertOne
+        object: collection
+        arguments:
+          session: session0
+          document:
+            _id: 1
+        result:
+          insertedId: 1
+      - name: assertCollectionNotExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: *collection_name
+      - name: commitTransaction
+        object: session0
+      - name: assertCollectionExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: *collection_name
+
+    expectations:
+      - command_started_event:
+          command:
+            drop: *collection_name
+            writeConcern:
+          command_name: drop
+          database_name: *database_name
+      - command_started_event:
+          command:
+            insert: *collection_name
+            documents:
+              - _id: 1
+            ordered: true
+            readConcern:
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction: true
+            autocommit: false
+            writeConcern:
+          command_name: insert
+          database_name: *database_name
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+      - command_started_event:
+          command:
+            commitTransaction: 1
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction:
+            autocommit: false
+            writeConcern:
+          command_name: commitTransaction
+          database_name: admin
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+
+  - description: create collection using $merge within transaction
+
+    operations:
+      - name: dropCollection
+        object: database
+        arguments:
+          collection: transaction
+      - name: startTransaction
+        object: session0
+      - name: aggregate
+        object: collection
+        arguments:
+          session: session0
+          pipeline:
+            - $merge: { into: "transaction" }
+      - name: assertCollectionNotExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: transaction
+      - name: commitTransaction
+        object: session0
+      - name: assertCollectionExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: transaction
+
+    expectations:
+      - command_started_event:
+          command:
+            drop: transaction
+            writeConcern:
+          command_name: drop
+          database_name: *database_name
+      - command_started_event:
+          command:
+            aggregate: *collection_name
+            readConcern:
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction: true
+            autocommit: false
+            writeConcern:
+          command_name: aggregate
+          database_name: *database_name
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+      - command_started_event:
+          command:
+            commitTransaction: 1
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction:
+            autocommit: false
+            writeConcern:
+          command_name: commitTransaction
+          database_name: admin
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+
+  - description: create collection using $out within transaction
+
+    operations:
+      - name: dropCollection
+        object: database
+        arguments:
+          collection: transaction
+      - name: startTransaction
+        object: session0
+      - name: aggregate
+        object: collection
+        arguments:
+          session: session0
+          pipeline:
+            - $out: transaction
+      - name: assertCollectionNotExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: transaction
+      - name: commitTransaction
+        object: session0
+      - name: assertCollectionExists
+        object: testRunner
+        arguments:
+          database: *database_name
+          collection: transaction
+
+    expectations:
+      - command_started_event:
+          command:
+            drop: transaction
+            writeConcern:
+          command_name: drop
+          database_name: *database_name
+      - command_started_event:
+          command:
+            aggregate: *collection_name
+            readConcern:
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction: true
+            autocommit: false
+            writeConcern:
+          command_name: aggregate
+          database_name: *database_name
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+      - command_started_event:
+          command:
+            commitTransaction: 1
+            lsid: session0
+            txnNumber:
+              $numberLong: "1"
+            startTransaction:
+            autocommit: false
+            writeConcern:
+          command_name: commitTransaction
+          database_name: admin
+      - command_started_event:
+          command:
+            listCollections: 1
+            writeConcern:
+          command_name: listCollections
+          database_name: *database_name
+

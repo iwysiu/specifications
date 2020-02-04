@@ -1,0 +1,471 @@
+{
+  "runOn": [
+    {
+      "minServerVersion": "4.3.3",
+      "topology": [
+        "replicaset"
+      ]
+    }
+  ],
+  "database_name": "transaction-tests",
+  "collection_name": "test",
+  "data": [],
+  "tests": [
+    {
+      "description": "explicitly create collection using create command",
+      "operations": [
+        {
+          "name": "dropCollection",
+          "object": "database",
+          "arguments": {
+            "collection": "test"
+          }
+        },
+        {
+          "name": "startTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "createCollection",
+          "object": "database",
+          "arguments": {
+            "session": "session0",
+            "collection": "test"
+          }
+        },
+        {
+          "name": "assertCollectionNotExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "test"
+          }
+        },
+        {
+          "name": "commitTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "assertCollectionExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "test"
+          }
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "drop": "test",
+              "writeConcern": null
+            },
+            "command_name": "drop",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "create": "test",
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": true,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "create",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "commitTransaction": 1,
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": null,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "commitTransaction",
+            "database_name": "admin"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        }
+      ]
+    },
+    {
+      "description": "implicitly create collection using insert",
+      "operations": [
+        {
+          "name": "dropCollection",
+          "object": "database",
+          "arguments": {
+            "collection": "test"
+          }
+        },
+        {
+          "name": "startTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "insertOne",
+          "object": "collection",
+          "arguments": {
+            "session": "session0",
+            "document": {
+              "_id": 1
+            }
+          },
+          "result": {
+            "insertedId": 1
+          }
+        },
+        {
+          "name": "assertCollectionNotExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "test"
+          }
+        },
+        {
+          "name": "commitTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "assertCollectionExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "test"
+          }
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "drop": "test",
+              "writeConcern": null
+            },
+            "command_name": "drop",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "insert": "test",
+              "documents": [
+                {
+                  "_id": 1
+                }
+              ],
+              "ordered": true,
+              "readConcern": null,
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": true,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "insert",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "commitTransaction": 1,
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": null,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "commitTransaction",
+            "database_name": "admin"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        }
+      ]
+    },
+    {
+      "description": "create collection using $merge within transaction",
+      "operations": [
+        {
+          "name": "dropCollection",
+          "object": "database",
+          "arguments": {
+            "collection": "transaction"
+          }
+        },
+        {
+          "name": "startTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "aggregate",
+          "object": "collection",
+          "arguments": {
+            "session": "session0",
+            "pipeline": [
+              {
+                "$merge": {
+                  "into": "transaction"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "assertCollectionNotExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "transaction"
+          }
+        },
+        {
+          "name": "commitTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "assertCollectionExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "transaction"
+          }
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "drop": "transaction",
+              "writeConcern": null
+            },
+            "command_name": "drop",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "aggregate": "test",
+              "readConcern": null,
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": true,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "aggregate",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "commitTransaction": 1,
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": null,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "commitTransaction",
+            "database_name": "admin"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        }
+      ]
+    },
+    {
+      "description": "create collection using $out within transaction",
+      "operations": [
+        {
+          "name": "dropCollection",
+          "object": "database",
+          "arguments": {
+            "collection": "transaction"
+          }
+        },
+        {
+          "name": "startTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "aggregate",
+          "object": "collection",
+          "arguments": {
+            "session": "session0",
+            "pipeline": [
+              {
+                "$out": "transaction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "assertCollectionNotExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "transaction"
+          }
+        },
+        {
+          "name": "commitTransaction",
+          "object": "session0"
+        },
+        {
+          "name": "assertCollectionExists",
+          "object": "testRunner",
+          "arguments": {
+            "database": "transaction-tests",
+            "collection": "transaction"
+          }
+        }
+      ],
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "drop": "transaction",
+              "writeConcern": null
+            },
+            "command_name": "drop",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "aggregate": "test",
+              "readConcern": null,
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": true,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "aggregate",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "commitTransaction": 1,
+              "lsid": "session0",
+              "txnNumber": {
+                "$numberLong": "1"
+              },
+              "startTransaction": null,
+              "autocommit": false,
+              "writeConcern": null
+            },
+            "command_name": "commitTransaction",
+            "database_name": "admin"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "listCollections": 1,
+              "writeConcern": null
+            },
+            "command_name": "listCollections",
+            "database_name": "transaction-tests"
+          }
+        }
+      ]
+    }
+  ]
+}
